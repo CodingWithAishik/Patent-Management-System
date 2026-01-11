@@ -72,7 +72,7 @@ For now, we've prepared the project for deployment.
 In the Bash console:
 
 ```bash
-# Create virtual environment
+# Create virtual environment with Python 3.10
 mkvirtualenv --python=/usr/bin/python3.10 patent_env
 
 # Activate it (should auto-activate after creation)
@@ -81,6 +81,8 @@ workon patent_env
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+**Note:** We're using Python 3.10 because PythonAnywhere doesn't support Python 3.12 yet. The project has been updated to use Django 5.1 which is fully compatible.
 
 ---
 

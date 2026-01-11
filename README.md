@@ -31,10 +31,10 @@ A comprehensive Django-based GUI application for managing patents (filed & grant
 
 ## Technology Stack
 
-- **Backend**: Django 6.0
+- **Backend**: Django 5.1.5
 - **Database**: SQLite (default)
 - **Frontend**: HTML5, CSS3, JavaScript
-- **Python**: 3.12.6
+- **Python**: 3.10+ (Development: 3.12.6, Production: 3.10)
 
 ## Project Structure
 
