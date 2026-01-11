@@ -1,0 +1,85 @@
+{% extends 'patents/base.html' %}
+{% load patent_filters %}
+
+{% block title %}{{ action }} {{ category.name }} - Patent Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ action }} {{ category.name }}</h1>
+
+    <form method="post" class="form-card">
+        {% csrf_token %}
+        
+        {% for field in category.field_definitions %}
+            <div class="form-group">
+                <label for="{{ field.name }}">
+                    {{ field.label }}
+                    {% if field.required %}<span class="required">*</span>{% endif %}
+                </label>
+                
+                {% if field.type == 'textarea' %}
+                    <textarea 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        rows="4"
+                        {% if field.required %}required{% endif %}
+                    >{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}</textarea>
+                
+                {% elif field.type == 'number' %}
+                    <input 
+                        type="number" 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        value="{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
+                        {% if field.required %}required{% endif %}
+                    >
+                
+                {% elif field.type == 'date' %}
+                    <input 
+                        type="date" 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        value="{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
+                        {% if field.required %}required{% endif %}
+                    >
+                
+                {% elif field.type == 'select' %}
+                    <select 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}"
+                        {% if field.required %}required{% endif %}
+                    >
+                        <option value="">-- Select --</option>
+                        {% for option in field.options %}
+                            <option value="{{ option }}" 
+                                {% if ip_item and ip_item.data|get_item:field.name == option %}selected{% endif %}
+                            >{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                
+                {% else %}
+                    <input 
+                        type="text" 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        value="{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
+                        {% if field.required %}required{% endif %}
+                    >
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{ action }}</button>
+            <a href="{% url 'patents:ip_list' category.slug %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.required {
+    color: var(--danger-color);
+    margin-left: 2px;
+}
+</style>
+{% endblock %}

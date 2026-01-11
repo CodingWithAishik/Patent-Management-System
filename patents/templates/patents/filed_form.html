@@ -1,0 +1,61 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}{{ action }} Filed Patent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ action }} Filed Patent</h1>
+    <a href="{% url 'patents:filed_list' %}" class="btn btn-secondary">← Back to List</a>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.sl_no.id_for_label }}">{{ form.sl_no.label }}</label>
+            {{ form.sl_no }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.date_of_filing.id_for_label }}">{{ form.date_of_filing.label }}</label>
+            {{ form.date_of_filing }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.inventors.id_for_label }}">{{ form.inventors.label }}</label>
+            {{ form.inventors }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.application_number.id_for_label }}">{{ form.application_number.label }}</label>
+            {{ form.application_number }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.date_of_publication.id_for_label }}">{{ form.date_of_publication.label }}</label>
+            {{ form.date_of_publication }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.abstract.id_for_label }}">{{ form.abstract.label }}</label>
+            {{ form.abstract }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.applicant_name.id_for_label }}">{{ form.applicant_name.label }}</label>
+            {{ form.applicant_name }}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">Save</button>
+            <a href="{% url 'patents:filed_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

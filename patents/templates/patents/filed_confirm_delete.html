@@ -1,0 +1,25 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}Delete Filed Patent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>⚠️ Confirm Deletion</h1>
+</div>
+
+<div class="form-container">
+    <div class="alert alert-error">
+        <p><strong>Are you sure you want to delete this filed patent?</strong></p>
+        <p>Title: {{ object.title }}</p>
+        <p>Date of Filing: {{ object.date_of_filing }}</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="actions mt-2">
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            <a href="{% url 'patents:filed_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

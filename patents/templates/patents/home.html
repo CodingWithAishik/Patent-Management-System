@@ -1,0 +1,62 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}Dashboard - IIEST Shibpur Patent System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Dashboard & Statistics</h1>
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <h2>📝 Copyrights</h2>
+        <div class="stat-number">{{ total_copyrights }}</div>
+        <p>Total copyright registrations</p>
+        <a href="{% url 'patents:copyright_list' %}" class="btn btn-primary">View All</a>
+        <a href="{% url 'patents:copyright_search' %}" class="btn btn-secondary">Search</a>
+        <a href="{% url 'patents:copyright_create' %}" class="btn btn-success">Add New</a>
+    </div>
+
+    <div class="stat-card">
+        <h2>📄 Patents Filed</h2>
+        <div class="stat-number">{{ total_filed }}</div>
+        <p>Total patent applications filed</p>
+        <a href="{% url 'patents:filed_list' %}" class="btn btn-primary">View All</a>
+        <a href="{% url 'patents:filed_search' %}" class="btn btn-secondary">Search</a>
+        <a href="{% url 'patents:filed_create' %}" class="btn btn-success">Add New</a>
+    </div>
+
+    <div class="stat-card">
+        <h2>✅ Patents Granted</h2>
+        <div class="stat-number">{{ total_granted }}</div>
+        <p>Total patents successfully granted</p>
+        <a href="{% url 'patents:granted_list' %}" class="btn btn-primary">View All</a>
+        <a href="{% url 'patents:granted_search' %}" class="btn btn-secondary">Search</a>
+        <a href="{% url 'patents:granted_create' %}" class="btn btn-success">Add New</a>
+    </div>
+</div>
+
+{% if recent_copyrights %}
+<div class="table-container">
+    <h2>Recent Copyrights</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Year</th>
+                <th>Faculty/Students</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in recent_copyrights %}
+            <tr>
+                <td>{{ item.year }}</td>
+                <td>{{ item.faculty_students|truncatewords:10 }}</td>
+                <td>{{ item.title|truncatewords:15 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

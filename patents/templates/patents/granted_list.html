@@ -1,0 +1,55 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}Patents Granted - All Records{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>✅ All Granted Patents</h1>
+    <div class="actions">
+        <a href="{% url 'patents:granted_search' %}" class="btn btn-secondary">🔍 Search</a>
+        <a href="{% url 'patents:granted_create' %}" class="btn btn-success">➕ Add New</a>
+    </div>
+</div>
+
+{% if patents %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Sl. No.</th>
+                <th>Patent No.</th>
+                <th>Date of Grant</th>
+                <th>Inventors</th>
+                <th>Title</th>
+                <th>Filing Institute</th>
+                <th class="no-sort">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in patents %}
+            <tr>
+                <td>{{ item.sl_no|default:"-" }}</td>
+                <td>{{ item.granted_patent_no|default:"-" }}</td>
+                <td>{{ item.date_of_grant|default:"-" }}</td>
+                <td>{{ item.inventors|truncatewords:6|default:"-" }}</td>
+                <td>{{ item.title|truncatewords:12|default:"-" }}</td>
+                <td>{{ item.filing_institute|truncatewords:6|default:"-" }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{% url 'patents:granted_update' item.pk %}" class="btn btn-primary btn-small">Edit</a>
+                        <a href="{% url 'patents:granted_delete' item.pk %}" class="btn btn-danger btn-small">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="text-center mt-2">Total: <strong>{{ patents.count }}</strong> records</p>
+</div>
+{% else %}
+<div class="no-data">
+    <p>No granted patent records found.</p>
+    <a href="{% url 'patents:granted_create' %}" class="btn btn-primary mt-2">Add First Granted Patent</a>
+</div>
+{% endif %}
+{% endblock %}

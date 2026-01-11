@@ -1,0 +1,55 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}Copyrights - All Records{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📝 All Copyrights</h1>
+    <div class="actions">
+        <a href="{% url 'patents:copyright_search' %}" class="btn btn-secondary">🔍 Search</a>
+        <a href="{% url 'patents:copyright_create' %}" class="btn btn-success">➕ Add New</a>
+    </div>
+</div>
+
+{% if copyrights %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Sl. No.</th>
+                <th>Year</th>
+                <th>Faculty/Students</th>
+                <th>Title</th>
+                <th>Filing Info</th>
+                <th>Inventors</th>
+                <th class="no-sort">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in copyrights %}
+            <tr>
+                <td>{{ item.sl_no|default:"-" }}</td>
+                <td>{{ item.year|default:"-" }}</td>
+                <td>{{ item.faculty_students|truncatewords:8|default:"-" }}</td>
+                <td>{{ item.title|truncatewords:10|default:"-" }}</td>
+                <td>{{ item.filing_info|truncatewords:8|default:"-" }}</td>
+                <td>{{ item.inventors|truncatewords:6|default:"-" }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{% url 'patents:copyright_update' item.pk %}" class="btn btn-primary btn-small">Edit</a>
+                        <a href="{% url 'patents:copyright_delete' item.pk %}" class="btn btn-danger btn-small">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="text-center mt-2">Total: <strong>{{ copyrights.count }}</strong> records</p>
+</div>
+{% else %}
+<div class="no-data">
+    <p>No copyright records found.</p>
+    <a href="{% url 'patents:copyright_create' %}" class="btn btn-primary mt-2">Add First Copyright</a>
+</div>
+{% endif %}
+{% endblock %}

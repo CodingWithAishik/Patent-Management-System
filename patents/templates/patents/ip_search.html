@@ -1,0 +1,123 @@
+{% extends 'patents/base.html' %}
+{% load patent_filters %}
+
+{% block title %}Search {{ category.name }} - Patent Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Search {{ category.name }}</h1>
+
+    <form method="get" class="search-form">
+        {% for field in category.field_definitions %}
+            <div class="form-group">
+                <label for="{{ field.name }}">{{ field.label }}</label>
+                
+                {% if field.type == 'textarea' %}
+                    <textarea 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        rows="2"
+                        placeholder="Search by {{ field.label }}"
+                    >{{ request.GET|get_item:field.name }}</textarea>
+                
+                {% elif field.type == 'number' %}
+                    <input 
+                        type="number" 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        value="{{ request.GET|get_item:field.name }}"
+                        placeholder="Search by {{ field.label }}"
+                    >
+                
+                {% elif field.type == 'date' %}
+                    <input 
+                        type="date" 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        value="{{ request.GET|get_item:field.name }}"
+                    >
+                
+                {% elif field.type == 'select' %}
+                    <select id="{{ field.name }}" name="{{ field.name }}">
+                        <option value="">-- All --</option>
+                        {% for option in field.options %}
+                            <option value="{{ option }}" 
+                                {% if request.GET|get_item:field.name == option %}selected{% endif %}
+                            >{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                
+                {% else %}
+                    <input 
+                        type="text" 
+                        id="{{ field.name }}" 
+                        name="{{ field.name }}" 
+                        value="{{ request.GET|get_item:field.name }}"
+                        placeholder="Search by {{ field.label }}"
+                    >
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="{% url 'patents:ip_list' category.slug %}" class="btn btn-secondary">View All</a>
+        </div>
+    </form>
+
+    {% if items %}
+        <h2>Search Results</h2>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        {% for field in category.field_definitions %}
+                            <th>{{ field.label }}</th>
+                        {% endfor %}
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.pk }}</td>
+                        {% for field in category.field_definitions %}
+                            <td>
+                                {% with value=item.data|get_item:field.name %}
+                                    {% if value %}
+                                        {% if value|length > 100 %}
+                                            {{ value|slice:":100" }}...
+                                        {% else %}
+                                            {{ value }}
+                                        {% endif %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                        {% endfor %}
+                        <td>{{ item.created_at|date:"Y-m-d" }}</td>
+                        <td class="actions">
+                            <a href="{% url 'patents:ip_edit' category.slug item.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                            <a href="{% url 'patents:ip_delete' category.slug item.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="results-count">
+            Found: {{ items|length }} result(s)
+        </div>
+    {% elif request.GET %}
+        <div class="empty-state">
+            <p>No results found matching your search criteria.</p>
+            <a href="{% url 'patents:ip_search' category.slug %}" class="btn btn-secondary">Clear Search</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

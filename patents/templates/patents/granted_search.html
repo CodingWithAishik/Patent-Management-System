@@ -1,0 +1,103 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}Search Granted Patents{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🔍 Search Granted Patents</h1>
+    <a href="{% url 'patents:granted_list' %}" class="btn btn-secondary">← Back to List</a>
+</div>
+
+<div class="search-container">
+    <h2>Select Search Parameters</h2>
+    <form method="get" action="{% url 'patents:granted_search' %}">
+        <div class="search-params">
+            <label>
+                <input type="checkbox" class="search-param-checkbox" data-field="field-patentno" name="enable_patentno">
+                Patent Number
+            </label>
+            <label>
+                <input type="checkbox" class="search-param-checkbox" data-field="field-date" name="enable_date">
+                Date of Grant
+            </label>
+            <label>
+                <input type="checkbox" class="search-param-checkbox" data-field="field-inventors" name="enable_inventors">
+                Inventors
+            </label>
+            <label>
+                <input type="checkbox" class="search-param-checkbox" data-field="field-title" name="enable_title">
+                Title
+            </label>
+            <label>
+                <input type="checkbox" class="search-param-checkbox" data-field="field-institute" name="enable_institute">
+                Filing Institute
+            </label>
+        </div>
+
+        <div class="search-fields">
+            <div id="field-patentno" class="search-field form-group">
+                <label for="granted_patent_no">Patent Number:</label>
+                <input type="text" id="granted_patent_no" name="granted_patent_no" placeholder="Enter patent number">
+            </div>
+            <div id="field-date" class="search-field form-group">
+                <label for="date_of_grant">Date of Grant:</label>
+                <input type="text" id="date_of_grant" name="date_of_grant" placeholder="Enter date or year">
+            </div>
+            <div id="field-inventors" class="search-field form-group">
+                <label for="inventors">Inventors:</label>
+                <input type="text" id="inventors" name="inventors" placeholder="Enter inventor name">
+            </div>
+            <div id="field-title" class="search-field form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" placeholder="Enter title keywords">
+            </div>
+            <div id="field-institute" class="search-field form-group">
+                <label for="filing_institute">Filing Institute:</label>
+                <input type="text" id="filing_institute" name="filing_institute" placeholder="Enter institute name">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Search</button>
+        <a href="{% url 'patents:granted_search' %}" class="btn btn-secondary mt-2">Clear</a>
+    </form>
+</div>
+
+{% if search_performed %}
+<div class="table-container mt-2">
+    <h2>Search Results ({{ count }} found)</h2>
+    {% if results %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patent No.</th>
+                <th>Date of Grant</th>
+                <th>Inventors</th>
+                <th>Title</th>
+                <th>Filing Institute</th>
+                <th class="no-sort">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results %}
+            <tr>
+                <td>{{ item.granted_patent_no|default:"-" }}</td>
+                <td>{{ item.date_of_grant|default:"-" }}</td>
+                <td>{{ item.inventors|truncatewords:6 }}</td>
+                <td>{{ item.title|truncatewords:12 }}</td>
+                <td>{{ item.filing_institute|truncatewords:6 }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{% url 'patents:granted_update' item.pk %}" class="btn btn-primary btn-small">Edit</a>
+                        <a href="{% url 'patents:granted_delete' item.pk %}" class="btn btn-danger btn-small">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="no-data">No records match your search criteria.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

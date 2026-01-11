@@ -1,0 +1,207 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}{{ action }} Category - Patent Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ action }} IP Category</h1>
+
+    <form method="post" class="form-card" id="categoryForm">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name">Category Name *</label>
+            <input type="text" id="name" name="name" value="{{ category.name|default:'' }}" required>
+            <small>This will be used to identify the category (e.g., "Trademarks", "Trade Secrets")</small>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3">{{ category.description|default:'' }}</textarea>
+        </div>
+
+        <hr>
+
+        <h3>Field Definitions</h3>
+        <p>Define the fields that each item in this category will have.</p>
+
+        <div id="fieldsContainer">
+            {% if category.field_definitions %}
+                {% for field in category.field_definitions %}
+                <div class="field-definition" data-index="{{ forloop.counter0 }}">
+                    <div class="field-header">
+                        <h4>Field {{ forloop.counter }}</h4>
+                        <button type="button" class="btn btn-sm btn-danger remove-field">Remove</button>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Field Name (internal) *</label>
+                            <input type="text" name="field_name_{{ forloop.counter0 }}" value="{{ field.name }}" required>
+                            <small>No spaces, use underscores (e.g., trademark_number)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Field Label (display) *</label>
+                            <input type="text" name="field_label_{{ forloop.counter0 }}" value="{{ field.label }}" required>
+                            <small>User-friendly label (e.g., Trademark Number)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Field Type *</label>
+                            <select name="field_type_{{ forloop.counter0 }}" class="field-type-select" required>
+                                <option value="text" {% if field.type == 'text' %}selected{% endif %}>Text (single line)</option>
+                                <option value="textarea" {% if field.type == 'textarea' %}selected{% endif %}>Text Area (multiple lines)</option>
+                                <option value="number" {% if field.type == 'number' %}selected{% endif %}>Number</option>
+                                <option value="date" {% if field.type == 'date' %}selected{% endif %}>Date</option>
+                                <option value="select" {% if field.type == 'select' %}selected{% endif %}>Dropdown/Select</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="field_required_{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}>
+                                Required field
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group select-options" {% if field.type != 'select' %}style="display:none;"{% endif %}>
+                        <label>Dropdown Options (comma-separated)</label>
+                        <input type="text" name="field_options_{{ forloop.counter0 }}" value="{{ field.options|join:',' }}" placeholder="Option 1, Option 2, Option 3">
+                        <small>Only for dropdown fields</small>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <button type="button" id="addFieldBtn" class="btn btn-secondary">+ Add Field</button>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{ action }} Category</button>
+            <a href="{% url 'patents:category_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.field-definition {
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    background: var(--card-bg);
+}
+
+.field-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.field-header h4 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.select-options {
+    margin-top: 1rem;
+}
+
+#addFieldBtn {
+    margin: 1rem 0 2rem 0;
+}
+</style>
+
+<script>
+let fieldCount = {{ category.field_definitions|length|default:0 }};
+
+document.getElementById('addFieldBtn').addEventListener('click', function() {
+    const container = document.getElementById('fieldsContainer');
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'field-definition';
+    fieldDiv.setAttribute('data-index', fieldCount);
+    
+    fieldDiv.innerHTML = `
+        <div class="field-header">
+            <h4>Field ${fieldCount + 1}</h4>
+            <button type="button" class="btn btn-sm btn-danger remove-field">Remove</button>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Field Name (internal) *</label>
+                <input type="text" name="field_name_${fieldCount}" required>
+                <small>No spaces, use underscores (e.g., trademark_number)</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Field Label (display) *</label>
+                <input type="text" name="field_label_${fieldCount}" required>
+                <small>User-friendly label (e.g., Trademark Number)</small>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Field Type *</label>
+                <select name="field_type_${fieldCount}" class="field-type-select" required>
+                    <option value="text">Text (single line)</option>
+                    <option value="textarea">Text Area (multiple lines)</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="select">Dropdown/Select</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="field_required_${fieldCount}">
+                    Required field
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-group select-options" style="display:none;">
+            <label>Dropdown Options (comma-separated)</label>
+            <input type="text" name="field_options_${fieldCount}" placeholder="Option 1, Option 2, Option 3">
+            <small>Only for dropdown fields</small>
+        </div>
+    `;
+    
+    container.appendChild(fieldDiv);
+    fieldCount++;
+});
+
+// Handle remove field
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-field')) {
+        e.target.closest('.field-definition').remove();
+    }
+});
+
+// Handle field type changes
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('field-type-select')) {
+        const fieldDef = e.target.closest('.field-definition');
+        const optionsDiv = fieldDef.querySelector('.select-options');
+        if (e.target.value === 'select') {
+            optionsDiv.style.display = 'block';
+        } else {
+            optionsDiv.style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %}
