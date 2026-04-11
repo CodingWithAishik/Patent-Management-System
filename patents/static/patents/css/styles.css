@@ -352,7 +352,6 @@ tbody tr:hover {
 .form-group input[type="checkbox"] {
     width: auto;
     height: auto;
-    min-height: auto;
     margin-right: 0.5rem;
 }
 
@@ -507,6 +506,7 @@ tbody tr:hover {
 /* ===== Table Sorting Styles ===== */
 .sortable-table th.sortable {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     position: relative;
     padding-right: 25px;
@@ -598,4 +598,63 @@ tbody tr:hover {
 
 [data-theme="dark"] .expandable-row.expanded {
     background-color: var(--bg-accent);
+}
+
+/* ===== Error Pages (404, 500) ===== */
+.error-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-container p {
+    margin-bottom: 20px;
+}
+
+.error-container .main-message {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.error-container .error-500 .main-message {
+    color: var(--danger);
+}
+
+.error-container .detail-box {
+    margin: 30px 0;
+}
+
+.error-container .detail-box p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.error-container .error-info {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    text-align: left;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+[data-theme="dark"] .error-container .error-info {
+    background-color: var(--bg-secondary);
+}
+
+.error-container .error-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.error-container .action-buttons {
+    margin-top: 30px;
+}
+
+.error-container .action-buttons a {
+    margin: 0 10px;
 }

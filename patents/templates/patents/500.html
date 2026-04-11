@@ -1,0 +1,34 @@
+{% extends 'patents/base.html' %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>500 - Server Error</h1>
+</div>
+
+<div class="error-container error-500">
+    <p class="main-message">
+        Something went wrong on our end.
+    </p>
+    
+    <div class="detail-box">
+        <p>
+            We've been notified about this error and are working to fix it.
+            <br>Please try again in a few moments.
+        </p>
+    </div>
+    
+    <div class="error-info">
+        <p>
+            <strong>Error ID:</strong> Request ID available in server logs<br>
+            <strong>Status:</strong> Our team has been notified<br>
+            <strong>Time:</strong> {{ request.META.SERVER_NAME }}
+        </p>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'patents:home' %}" class="btn btn-primary">← Back to Home</a>
+    </div>
+</div>
+{% endblock %}

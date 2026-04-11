@@ -1,9 +1,13 @@
 import csv
+import logging
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
+from django.db import transaction
 from patents.models import Copyright, PatentFiled, PatentGranted
+
+logger = logging.getLogger(__name__)
 from patents.utils.csv_preprocessing import (
     HEADER_MARKERS,
     clean_text,
@@ -79,9 +83,11 @@ class Command(BaseCommand):
             return list(csv.reader(handle))
 
     def import_copyrights(self, file_path):
-        """Import copyright data from CSV"""
+        """Import copyright data from CSV with transaction safety"""
         if not Path(file_path).exists():
-            self.stdout.write(self.style.ERROR(f'File not found: {file_path}'))
+            error_msg = f'File not found: {file_path}'
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.error(f'Copyright import failed: {error_msg}')
             return
         
         rows = self.load_rows(file_path)
@@ -97,73 +103,83 @@ class Command(BaseCommand):
         count = 0
         skipped = 0
 
-        for row_number, raw_row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
-            if is_empty_row(raw_row):
-                self._record_diagnostic(diagnostics, 'empty_rows', row_number, raw_row)
-                continue
-            if is_noise_row(raw_row):
-                self._record_diagnostic(diagnostics, 'noise_rows', row_number, raw_row)
-                continue
-            if row_is_header(raw_row, HEADER_MARKERS['copyright']):
-                self._record_diagnostic(diagnostics, 'header_like_rows', row_number, raw_row)
-                continue
+        try:
+            with transaction.atomic():
+                for row_number, raw_row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
+                    if is_empty_row(raw_row):
+                        self._record_diagnostic(diagnostics, 'empty_rows', row_number, raw_row)
+                        continue
+                    if is_noise_row(raw_row):
+                        self._record_diagnostic(diagnostics, 'noise_rows', row_number, raw_row)
+                        continue
+                    if row_is_header(raw_row, HEADER_MARKERS['copyright']):
+                        self._record_diagnostic(diagnostics, 'header_like_rows', row_number, raw_row)
+                        continue
 
-            row = compact_row(raw_row, expected_length=6, merge_start=3, tail_length=3)
-            if len(row) != 6:
-                skipped += 1
-                self._record_diagnostic(
-                    diagnostics,
-                    'structurally_ambiguous_rows',
-                    row_number,
-                    raw_row,
-                    detail=f'compacted length={len(row)} expected=6',
-                )
-                self.stdout.write(self.style.WARNING(f'Skipped copyright row {row_number}: unexpected structure'))
-                continue
+                    row = compact_row(raw_row, expected_length=6, merge_start=3, tail_length=3)
+                    if len(row) != 6:
+                        skipped += 1
+                        self._record_diagnostic(
+                            diagnostics,
+                            'structurally_ambiguous_rows',
+                            row_number,
+                            raw_row,
+                            detail=f'compacted length={len(row)} expected=6',
+                        )
+                        self.stdout.write(self.style.WARNING(f'Skipped copyright row {row_number}: unexpected structure'))
+                        continue
 
-            values = [
-                normalize_year(row[1]),
-                clean_text(row[2]),
-                normalize_multiline_text(row[3]),
-                normalize_multiline_text(row[4]),
-                normalize_multiline_text(row[5]),
-            ]
+                    values = [
+                        normalize_year(row[1]),
+                        clean_text(row[2]),
+                        normalize_multiline_text(row[3]),
+                        normalize_multiline_text(row[4]),
+                        normalize_multiline_text(row[5]),
+                    ]
 
-            signature = signature_from_values(values)
-            if signature in seen_signatures:
-                self._record_diagnostic(diagnostics, 'duplicate_rows', row_number, raw_row)
-                continue
-            seen_signatures.add(signature)
+                    signature = signature_from_values(values)
+                    if signature in seen_signatures:
+                        self._record_diagnostic(diagnostics, 'duplicate_rows', row_number, raw_row)
+                        continue
+                    seen_signatures.add(signature)
 
-            try:
-                Copyright.objects.create(
-                    year=values[0],
-                    faculty_students=values[1],
-                    title=values[2],
-                    filing_info=values[3],
-                    inventors=values[4],
-                )
-                count += 1
-            except Exception as exc:
-                skipped += 1
-                self._record_diagnostic(
-                    diagnostics,
-                    'failed_import_rows',
-                    row_number,
-                    raw_row,
-                    detail=str(exc),
-                )
-                self.stdout.write(self.style.WARNING(f'Skipped copyright row {row_number}: {exc}'))
+                    try:
+                        Copyright.objects.create(
+                            year=values[0],
+                            faculty_students=values[1],
+                            title=values[2],
+                            filing_info=values[3],
+                            inventors=values[4],
+                        )
+                        count += 1
+                    except Exception as exc:
+                        skipped += 1
+                        self._record_diagnostic(
+                            diagnostics,
+                            'failed_import_rows',
+                            row_number,
+                            raw_row,
+                            detail=str(exc),
+                        )
+                        self.stdout.write(self.style.WARNING(f'Skipped copyright row {row_number}: {exc}'))
+        except Exception as exc:
+            error_msg = f'Copyright import transaction failed: {exc}'
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.exception(error_msg)
+            raise CommandError(error_msg)
 
         self.stdout.write(self.style.SUCCESS(f'Imported {count} copyright records'))
         if skipped:
             self.stdout.write(self.style.WARNING(f'Skipped {skipped} copyright rows during cleanup'))
+        logger.info(f'Copyright import completed: {count} imported, {skipped} skipped')
         self._emit_diagnostics(diagnostics)
 
     def import_filed_patents(self, file_path):
-        """Import filed patent data from CSV"""
+        """Import filed patent data from CSV with transaction safety"""
         if not Path(file_path).exists():
-            self.stdout.write(self.style.ERROR(f'File not found: {file_path}'))
+            error_msg = f'File not found: {file_path}'
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.error(f'Filed patent import failed: {error_msg}')
             return
         
         rows = self.load_rows(file_path)
@@ -179,77 +195,87 @@ class Command(BaseCommand):
         count = 0
         skipped = 0
 
-        for row_number, raw_row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
-            if is_empty_row(raw_row):
-                self._record_diagnostic(diagnostics, 'empty_rows', row_number, raw_row)
-                continue
-            if is_noise_row(raw_row):
-                self._record_diagnostic(diagnostics, 'noise_rows', row_number, raw_row)
-                continue
-            if row_is_header(raw_row, HEADER_MARKERS['filed']):
-                self._record_diagnostic(diagnostics, 'header_like_rows', row_number, raw_row)
-                continue
+        try:
+            with transaction.atomic():
+                for row_number, raw_row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
+                    if is_empty_row(raw_row):
+                        self._record_diagnostic(diagnostics, 'empty_rows', row_number, raw_row)
+                        continue
+                    if is_noise_row(raw_row):
+                        self._record_diagnostic(diagnostics, 'noise_rows', row_number, raw_row)
+                        continue
+                    if row_is_header(raw_row, HEADER_MARKERS['filed']):
+                        self._record_diagnostic(diagnostics, 'header_like_rows', row_number, raw_row)
+                        continue
 
-            row = compact_row(raw_row, expected_length=8, merge_start=3, tail_length=4)
-            if len(row) != 8:
-                skipped += 1
-                self._record_diagnostic(
-                    diagnostics,
-                    'structurally_ambiguous_rows',
-                    row_number,
-                    raw_row,
-                    detail=f'compacted length={len(row)} expected=8',
-                )
-                self.stdout.write(self.style.WARNING(f'Skipped filed row {row_number}: unexpected structure'))
-                continue
+                    row = compact_row(raw_row, expected_length=8, merge_start=3, tail_length=4)
+                    if len(row) != 8:
+                        skipped += 1
+                        self._record_diagnostic(
+                            diagnostics,
+                            'structurally_ambiguous_rows',
+                            row_number,
+                            raw_row,
+                            detail=f'compacted length={len(row)} expected=8',
+                        )
+                        self.stdout.write(self.style.WARNING(f'Skipped filed row {row_number}: unexpected structure'))
+                        continue
 
-            values = [
-                normalize_date_text(row[1]),
-                clean_text(row[2]),
-                normalize_multiline_text(row[3]),
-                normalize_application_number(row[4]),
-                normalize_publication_status(row[5]),
-                normalize_multiline_text(row[6]),
-                normalize_multiline_text(row[7]),
-            ]
+                    values = [
+                        normalize_date_text(row[1]),
+                        clean_text(row[2]),
+                        normalize_multiline_text(row[3]),
+                        normalize_application_number(row[4]),
+                        normalize_publication_status(row[5]),
+                        normalize_multiline_text(row[6]),
+                        normalize_multiline_text(row[7]),
+                    ]
 
-            signature = signature_from_values(values)
-            if signature in seen_signatures:
-                self._record_diagnostic(diagnostics, 'duplicate_rows', row_number, raw_row)
-                continue
-            seen_signatures.add(signature)
+                    signature = signature_from_values(values)
+                    if signature in seen_signatures:
+                        self._record_diagnostic(diagnostics, 'duplicate_rows', row_number, raw_row)
+                        continue
+                    seen_signatures.add(signature)
 
-            try:
-                PatentFiled.objects.create(
-                    date_of_filing=values[0],
-                    inventors=values[1],
-                    title=values[2],
-                    application_number=values[3],
-                    date_of_publication=values[4],
-                    abstract=values[5],
-                    applicant_name=values[6],
-                )
-                count += 1
-            except Exception as exc:
-                skipped += 1
-                self._record_diagnostic(
-                    diagnostics,
-                    'failed_import_rows',
-                    row_number,
-                    raw_row,
-                    detail=str(exc),
-                )
-                self.stdout.write(self.style.WARNING(f'Skipped filed row {row_number}: {exc}'))
+                    try:
+                        PatentFiled.objects.create(
+                            date_of_filing=values[0],
+                            inventors=values[1],
+                            title=values[2],
+                            application_number=values[3],
+                            date_of_publication=values[4],
+                            abstract=values[5],
+                            applicant_name=values[6],
+                        )
+                        count += 1
+                    except Exception as exc:
+                        skipped += 1
+                        self._record_diagnostic(
+                            diagnostics,
+                            'failed_import_rows',
+                            row_number,
+                            raw_row,
+                            detail=str(exc),
+                        )
+                        self.stdout.write(self.style.WARNING(f'Skipped filed row {row_number}: {exc}'))
+        except Exception as exc:
+            error_msg = f'Filed patent import transaction failed: {exc}'
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.exception(error_msg)
+            raise CommandError(error_msg)
 
         self.stdout.write(self.style.SUCCESS(f'Imported {count} filed patent records'))
         if skipped:
             self.stdout.write(self.style.WARNING(f'Skipped {skipped} filed rows during cleanup'))
+        logger.info(f'Filed patent import completed: {count} imported, {skipped} skipped')
         self._emit_diagnostics(diagnostics)
 
     def import_granted_patents(self, file_path):
-        """Import granted patent data from CSV"""
+        """Import granted patent data from CSV with transaction safety"""
         if not Path(file_path).exists():
-            self.stdout.write(self.style.ERROR(f'File not found: {file_path}'))
+            error_msg = f'File not found: {file_path}'
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.error(f'Granted patent import failed: {error_msg}')
             return
         
         rows = self.load_rows(file_path)
@@ -265,73 +291,81 @@ class Command(BaseCommand):
         count = 0
         skipped = 0
 
-        for row_number, raw_row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
-            if is_empty_row(raw_row):
-                self._record_diagnostic(diagnostics, 'empty_rows', row_number, raw_row)
-                continue
-            if is_noise_row(raw_row):
-                self._record_diagnostic(diagnostics, 'noise_rows', row_number, raw_row)
-                continue
-            if row_is_header(raw_row, HEADER_MARKERS['granted']):
-                self._record_diagnostic(diagnostics, 'header_like_rows', row_number, raw_row)
-                continue
+        try:
+            with transaction.atomic():
+                for row_number, raw_row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
+                    if is_empty_row(raw_row):
+                        self._record_diagnostic(diagnostics, 'empty_rows', row_number, raw_row)
+                        continue
+                    if is_noise_row(raw_row):
+                        self._record_diagnostic(diagnostics, 'noise_rows', row_number, raw_row)
+                        continue
+                    if row_is_header(raw_row, HEADER_MARKERS['granted']):
+                        self._record_diagnostic(diagnostics, 'header_like_rows', row_number, raw_row)
+                        continue
 
-            row = compact_row(raw_row, expected_length=9, merge_start=4, tail_length=5)
-            if len(row) != 9:
-                skipped += 1
-                self._record_diagnostic(
-                    diagnostics,
-                    'structurally_ambiguous_rows',
-                    row_number,
-                    raw_row,
-                    detail=f'compacted length={len(row)} expected=9',
-                )
-                self.stdout.write(self.style.WARNING(f'Skipped granted row {row_number}: unexpected structure'))
-                continue
+                    row = compact_row(raw_row, expected_length=9, merge_start=4, tail_length=5)
+                    if len(row) != 9:
+                        skipped += 1
+                        self._record_diagnostic(
+                            diagnostics,
+                            'structurally_ambiguous_rows',
+                            row_number,
+                            raw_row,
+                            detail=f'compacted length={len(row)} expected=9',
+                        )
+                        self.stdout.write(self.style.WARNING(f'Skipped granted row {row_number}: unexpected structure'))
+                        continue
 
-            values = [
-                normalize_multiline_text(row[1]),
-                normalize_date_text(row[2]),
-                clean_text(row[3]),
-                normalize_multiline_text(row[4]),
-                normalize_application_number(row[5]),
-                normalize_publication_status(row[6]),
-                normalize_multiline_text(row[7]),
-                normalize_multiline_text(row[8]),
-            ]
+                    values = [
+                        normalize_multiline_text(row[1]),
+                        normalize_date_text(row[2]),
+                        clean_text(row[3]),
+                        normalize_multiline_text(row[4]),
+                        normalize_application_number(row[5]),
+                        normalize_publication_status(row[6]),
+                        normalize_multiline_text(row[7]),
+                        normalize_multiline_text(row[8]),
+                    ]
 
-            signature = signature_from_values(values)
-            if signature in seen_signatures:
-                self._record_diagnostic(diagnostics, 'duplicate_rows', row_number, raw_row)
-                continue
-            seen_signatures.add(signature)
+                    signature = signature_from_values(values)
+                    if signature in seen_signatures:
+                        self._record_diagnostic(diagnostics, 'duplicate_rows', row_number, raw_row)
+                        continue
+                    seen_signatures.add(signature)
 
-            try:
-                PatentGranted.objects.create(
-                    granted_patent_no=values[0],
-                    date_of_grant=values[1],
-                    inventors=values[2],
-                    title=values[3],
-                    application_number=values[4],
-                    date_of_publication=values[5],
-                    filing_institute=values[6],
-                    abstract=values[7],
-                )
-                count += 1
-            except Exception as exc:
-                skipped += 1
-                self._record_diagnostic(
-                    diagnostics,
-                    'failed_import_rows',
-                    row_number,
-                    raw_row,
-                    detail=str(exc),
-                )
-                self.stdout.write(self.style.WARNING(f'Skipped granted row {row_number}: {exc}'))
+                    try:
+                        PatentGranted.objects.create(
+                            granted_patent_no=values[0],
+                            date_of_grant=values[1],
+                            inventors=values[2],
+                            title=values[3],
+                            application_number=values[4],
+                            date_of_publication=values[5],
+                            filing_institute=values[6],
+                            abstract=values[7],
+                        )
+                        count += 1
+                    except Exception as exc:
+                        skipped += 1
+                        self._record_diagnostic(
+                            diagnostics,
+                            'failed_import_rows',
+                            row_number,
+                            raw_row,
+                            detail=str(exc),
+                        )
+                        self.stdout.write(self.style.WARNING(f'Skipped granted row {row_number}: {exc}'))
+        except Exception as exc:
+            error_msg = f'Granted patent import transaction failed: {exc}'
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.exception(error_msg)
+            raise CommandError(error_msg)
 
         self.stdout.write(self.style.SUCCESS(f'Imported {count} granted patent records'))
         if skipped:
             self.stdout.write(self.style.WARNING(f'Skipped {skipped} granted rows during cleanup'))
+        logger.info(f'Granted patent import completed: {count} imported, {skipped} skipped')
         self._emit_diagnostics(diagnostics)
 
     def _start_diagnostics(self, dataset, file_path, header_row_idx, total_rows):
