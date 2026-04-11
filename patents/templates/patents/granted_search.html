@@ -1,4 +1,5 @@
 {% extends 'patents/base.html' %}
+{% load patent_filters %}
 
 {% block title %}Search Granted Patents{% endblock %}
 
@@ -81,10 +82,31 @@
             {% for item in results %}
             <tr>
                 <td>{{ item.granted_patent_no|default:"-" }}</td>
-                <td>{{ item.date_of_grant|default:"-" }}</td>
-                <td>{{ item.inventors|truncatewords:6 }}</td>
-                <td>{{ item.title|truncatewords:12 }}</td>
-                <td>{{ item.filing_institute|truncatewords:6 }}</td>
+                <td>{{ item.date_of_grant|normalize_date|default:"-" }}</td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.inventors|default:'' }}">
+                        <span class="truncated-text">{{ item.inventors|truncate_smart:60|default:"-" }}</span>
+                        {% if item.inventors and item.inventors|length > 60 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.title|default:'' }}">
+                        <span class="truncated-text">{{ item.title|truncate_smart:100|default:"-" }}</span>
+                        {% if item.title and item.title|length > 100 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.filing_institute|default:'' }}">
+                        <span class="truncated-text">{{ item.filing_institute|truncate_smart:60|default:"-" }}</span>
+                        {% if item.filing_institute and item.filing_institute|length > 60 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
                 <td>
                     <div class="actions">
                         <a href="{% url 'patents:granted_update' item.pk %}" class="btn btn-primary btn-small">Edit</a>

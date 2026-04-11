@@ -19,37 +19,51 @@
 
     {% if items %}
         <div class="table-container">
-            <table>
+            <table class="sortable-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th class="sortable" data-field="pk" data-type="number">
+                            ID
+                            <span class="sort-icon">⇅</span>
+                        </th>
                         {% for field in category.field_definitions %}
-                            <th>{{ field.label }}</th>
+                            <th class="sortable" data-field="data__{{ field.name }}" data-type="{{ field.type }}">
+                                {{ field.label }}
+                                <span class="sort-icon">⇅</span>
+                            </th>
                         {% endfor %}
-                        <th>Created</th>
-                        <th>Actions</th>
+                        <th class="sortable" data-field="created_at" data-type="date">
+                            Created
+                            <span class="sort-icon">⇅</span>
+                        </th>
+                        <th class="no-sort">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
-                    <tr>
+                    <tr class="expandable-row" data-row-id="{{ item.pk }}">
                         <td>{{ item.pk }}</td>
                         {% for field in category.field_definitions %}
                             <td>
                                 {% with value=item.data|get_item:field.name %}
                                     {% if value %}
-                                        {% if value|length > 100 %}
-                                            {{ value|slice:":100" }}...
-                                        {% else %}
-                                            {{ value }}
-                                        {% endif %}
+                                        <div class="truncate-cell" data-full-text="{{ value }}">
+                                            {% if field.type == 'date' %}
+                                                <span class="truncated-text">{{ value|normalize_date }}</span>
+                                            {% elif value|length > 100 %}
+                                                <span class="truncated-text">{{ value|truncate_smart:100 }}</span>
+                                                <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                                            {% else %}
+                                                <span class="truncated-text">{{ value }}</span>
+                                            {% endif %}
+                                        </div>
                                     {% else %}
                                         —
                                     {% endif %}
                                 {% endwith %}
                             </td>
                         {% endfor %}
-                        <td>{{ item.created_at|date:"Y-m-d" }}</td>
+                        <td>{{ item.created_at|date:"d/m/Y" }}</td>
                         <td class="actions">
                             <a href="{% url 'patents:ip_edit' category.slug item.pk %}" class="btn btn-sm btn-secondary">Edit</a>
                             <a href="{% url 'patents:ip_delete' category.slug item.pk %}" class="btn btn-sm btn-danger">Delete</a>

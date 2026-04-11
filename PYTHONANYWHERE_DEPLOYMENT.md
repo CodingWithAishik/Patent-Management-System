@@ -99,9 +99,12 @@ pip install -r requirements.txt
    - Click **"Next"**
 
 3. **Configure Virtual Environment:**
-   - In the **"Virtualenv"** section
-   - Enter: `/home/YOUR-USERNAME/.virtualenvs/patent_env`
-   - (Replace YOUR-USERNAME with your actual username)
+   - After creating the web app, you'll be on the **Web** tab configuration page
+   - Scroll down to find the **"Virtualenv"** section (about halfway down the page)
+   - You'll see a text box that says "Enter path to a virtualenv, if desired"
+   - Click in that text box and enter: `/home/YOUR-USERNAME/.virtualenvs/patent_env`
+   - (Replace YOUR-USERNAME with your actual PythonAnywhere username)
+   - The checkmark will appear if the path is valid
 
 4. **Configure WSGI File:**
    - In the **"Code"** section

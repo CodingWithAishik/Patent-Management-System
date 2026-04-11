@@ -95,17 +95,140 @@ function confirmDelete(itemName) {
     return confirm(`Are you sure you want to delete "${itemName}"?`);
 }
 
-// ===== Table Sorting (Optional Enhancement) =====
+// ===== Table Sorting =====
 document.addEventListener('DOMContentLoaded', function() {
-    const tables = document.querySelectorAll('table');
+    const tables = document.querySelectorAll('.sortable-table');
+    console.log('Found', tables.length, 'sortable tables');
     
     tables.forEach(table => {
-        const headers = table.querySelectorAll('th');
-        headers.forEach((header, index) => {
-            if (!header.classList.contains('no-sort')) {
-                header.style.cursor = 'pointer';
-                header.title = 'Click to sort';
-            }
+        const headers = table.querySelectorAll('th.sortable');
+        console.log('Found', headers.length, 'sortable headers in table');
+        
+        headers.forEach(header => {
+            header.style.cursor = 'pointer'; // Ensure cursor shows it's clickable
+            header.addEventListener('click', function() {
+                console.log('Sorting column:', this.getAttribute('data-field'));
+                const field = this.getAttribute('data-field');
+                const type = this.getAttribute('data-type');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                // Determine sort order
+                let ascending = true;
+                if (this.classList.contains('sorted-asc')) {
+                    ascending = false;
+                    this.classList.remove('sorted-asc');
+                    this.classList.add('sorted-desc');
+                } else {
+                    // Remove sorting from all headers
+                    headers.forEach(h => {
+                        h.classList.remove('sorted-asc', 'sorted-desc');
+                    });
+                    this.classList.add('sorted-asc');
+                }
+                
+                // Get column index
+                const columnIndex = Array.from(this.parentElement.children).indexOf(this);
+                
+                // Sort rows
+                rows.sort((a, b) => {
+                    const aCell = a.children[columnIndex];
+                    const bCell = b.children[columnIndex];
+                    
+                    // Get text from truncate-cell if it exists, otherwise from cell
+                    let aValue = '';
+                    let bValue = '';
+                    
+                    const aTruncateCell = aCell.querySelector('.truncate-cell');
+                    const bTruncateCell = bCell.querySelector('.truncate-cell');
+                    
+                    if (aTruncateCell) {
+                        // Use data-full-text for accurate sorting
+                        aValue = aTruncateCell.getAttribute('data-full-text') || '';
+                    } else {
+                        aValue = aCell.textContent.trim();
+                    }
+                    
+                    if (bTruncateCell) {
+                        // Use data-full-text for accurate sorting
+                        bValue = bTruncateCell.getAttribute('data-full-text') || '';
+                    } else {
+                        bValue = bCell.textContent.trim();
+                    }
+                    
+                    // Handle empty values
+                    if (aValue === '-' || aValue === '—' || aValue === '') aValue = '';
+                    if (bValue === '-' || bValue === '—' || bValue === '') bValue = '';
+                    
+                    // Sort based on type
+                    if (type === 'number') {
+                        aValue = parseFloat(aValue) || 0;
+                        bValue = parseFloat(bValue) || 0;
+                        return ascending ? aValue - bValue : bValue - aValue;
+                    } else if (type === 'date') {
+                        // Parse dates in dd/mm/yyyy format
+                        aValue = parseDateString(aValue);
+                        bValue = parseDateString(bValue);
+                        return ascending ? aValue - bValue : bValue - aValue;
+                    } else {
+                        // Text comparison
+                        if (ascending) {
+                            return aValue.localeCompare(bValue);
+                        } else {
+                            return bValue.localeCompare(aValue);
+                        }
+                    }
+                });
+                
+                // Re-append rows in sorted order
+                rows.forEach(row => tbody.appendChild(row));
+            });
         });
     });
 });
+
+// Helper function to parse date strings
+function parseDateString(dateStr) {
+    if (!dateStr || dateStr === '-' || dateStr === '—') {
+        return 0;
+    }
+    
+    // Handle dd/mm/yyyy or dd.mm.yyyy or dd-mm-yyyy formats
+    const parts = dateStr.split(/[\/\.\-]/);
+    if (parts.length === 3) {
+        // Assume dd/mm/yyyy format
+        const day = parseInt(parts[0]) || 0;
+        const month = parseInt(parts[1]) || 0;
+        const year = parseInt(parts[2]) || 0;
+        return new Date(year, month - 1, day).getTime();
+    }
+    
+    // Try to parse as regular date
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+// ===== Show More / Show Less Toggle =====
+// Make function globally accessible for inline onclick handlers
+window.toggleShowMore = function(button) {
+    console.log('toggleShowMore called');
+    const cell = button.closest('.truncate-cell');
+    const textSpan = cell.querySelector('.truncated-text');
+    const fullText = cell.getAttribute('data-full-text');
+    
+    if (button.classList.contains('expanded')) {
+        // Collapse: show truncated text
+        const truncatedText = fullText.length > 100 ? fullText.substring(0, 100) + '...' : fullText;
+        textSpan.textContent = truncatedText;
+        button.textContent = 'Show More';
+        button.classList.remove('expanded');
+        cell.classList.remove('expanded');
+    } else {
+        // Expand: show full text
+        textSpan.textContent = fullText;
+        button.textContent = 'Show Less';
+        button.classList.add('expanded');
+        cell.classList.add('expanded');
+    }
+};
+

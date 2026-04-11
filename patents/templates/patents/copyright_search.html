@@ -1,4 +1,5 @@
 {% extends 'patents/base.html' %}
+{% load patent_filters %}
 
 {% block title %}Search Copyrights{% endblock %}
 
@@ -75,10 +76,38 @@
             <tr>
                 <td>{{ item.sl_no|default:"-" }}</td>
                 <td>{{ item.year|default:"-" }}</td>
-                <td>{{ item.faculty_students|truncatewords:8 }}</td>
-                <td>{{ item.title|truncatewords:10 }}</td>
-                <td>{{ item.filing_info|truncatewords:8 }}</td>
-                <td>{{ item.inventors|truncatewords:6 }}</td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.faculty_students|default:'' }}">
+                        <span class="truncated-text">{{ item.faculty_students|truncate_smart:80|default:"-" }}</span>
+                        {% if item.faculty_students and item.faculty_students|length > 80 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.title|default:'' }}">
+                        <span class="truncated-text">{{ item.title|truncate_smart:100|default:"-" }}</span>
+                        {% if item.title and item.title|length > 100 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.filing_info|default:'' }}">
+                        <span class="truncated-text">{{ item.filing_info|truncate_smart:80|default:"-" }}</span>
+                        {% if item.filing_info and item.filing_info|length > 80 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="truncate-cell" data-full-text="{{ item.inventors|default:'' }}">
+                        <span class="truncated-text">{{ item.inventors|truncate_smart:60|default:"-" }}</span>
+                        {% if item.inventors and item.inventors|length > 60 %}
+                        <button class="show-more-btn" onclick="toggleShowMore(this)">Show More</button>
+                        {% endif %}
+                    </div>
+                </td>
                 <td>
                     <div class="actions">
                         <a href="{% url 'patents:copyright_update' item.pk %}" class="btn btn-primary btn-small">Edit</a>

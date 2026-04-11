@@ -8,16 +8,24 @@
 
     <form method="post" class="form-card" id="categoryForm">
         {% csrf_token %}
+
+        {% if schema_errors %}
+            <div class="alert alert-danger">
+                {% for error in schema_errors %}
+                    <div class="schema-error-item">- {{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         
         <div class="form-group">
             <label for="name">Category Name *</label>
-            <input type="text" id="name" name="name" value="{{ category.name|default:'' }}" required>
+            <input type="text" id="name" name="name" value="{{ category_name|default:'' }}" required>
             <small>This will be used to identify the category (e.g., "Trademarks", "Trade Secrets")</small>
         </div>
 
         <div class="form-group">
             <label for="description">Description</label>
-            <textarea id="description" name="description" rows="3">{{ category.description|default:'' }}</textarea>
+            <textarea id="description" name="description" rows="3">{{ category_description|default:'' }}</textarea>
         </div>
 
         <hr>
@@ -26,8 +34,8 @@
         <p>Define the fields that each item in this category will have.</p>
 
         <div id="fieldsContainer">
-            {% if category.field_definitions %}
-                {% for field in category.field_definitions %}
+            {% if field_definitions %}
+                {% for field in field_definitions %}
                 <div class="field-definition" data-index="{{ forloop.counter0 }}">
                     <div class="field-header">
                         <h4>Field {{ forloop.counter }}</h4>
@@ -37,13 +45,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Field Name (internal) *</label>
-                            <input type="text" name="field_name_{{ forloop.counter0 }}" value="{{ field.name }}" required>
+                            <input type="text" name="field_name_{{ forloop.counter0 }}" value="{{ field.name }}" title="Field Name" aria-label="Field Name" required>
                             <small>No spaces, use underscores (e.g., trademark_number)</small>
                         </div>
                         
                         <div class="form-group">
                             <label>Field Label (display) *</label>
-                            <input type="text" name="field_label_{{ forloop.counter0 }}" value="{{ field.label }}" required>
+                            <input type="text" name="field_label_{{ forloop.counter0 }}" value="{{ field.label }}" title="Field Label" aria-label="Field Label" required>
                             <small>User-friendly label (e.g., Trademark Number)</small>
                         </div>
                     </div>
@@ -51,7 +59,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Field Type *</label>
-                            <select name="field_type_{{ forloop.counter0 }}" class="field-type-select" required>
+                            <select name="field_type_{{ forloop.counter0 }}" class="field-type-select" title="Field Type" aria-label="Field Type" required>
                                 <option value="text" {% if field.type == 'text' %}selected{% endif %}>Text (single line)</option>
                                 <option value="textarea" {% if field.type == 'textarea' %}selected{% endif %}>Text Area (multiple lines)</option>
                                 <option value="number" {% if field.type == 'number' %}selected{% endif %}>Number</option>
@@ -122,10 +130,17 @@
 #addFieldBtn {
     margin: 1rem 0 2rem 0;
 }
+
+.schema-error-item {
+    margin: 0.25rem 0;
+}
 </style>
 
+<div id="category-meta" data-field-count="{{ field_definitions|length|default:0 }}"></div>
+
 <script>
-let fieldCount = {{ category.field_definitions|length|default:0 }};
+const categoryMeta = document.getElementById('category-meta');
+let fieldCount = parseInt(categoryMeta ? categoryMeta.dataset.fieldCount : '0', 10);
 
 document.getElementById('addFieldBtn').addEventListener('click', function() {
     const container = document.getElementById('fieldsContainer');

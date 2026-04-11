@@ -504,3 +504,98 @@ tbody tr:hover {
     color: var(--text-muted);
     font-size: 1.1rem;
 }
+/* ===== Table Sorting Styles ===== */
+.sortable-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 25px;
+}
+
+.sortable-table th.sortable:hover {
+    background-color: var(--blue-100);
+}
+
+[data-theme="dark"] .sortable-table th.sortable:hover {
+    background-color: var(--bg-accent);
+}
+
+.sortable-table th.sortable .sort-icon {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9em;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.sortable-table th.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.sortable-table th.sortable.sorted-asc .sort-icon::before {
+    content: '▲';
+    color: var(--blue-600);
+    opacity: 1;
+}
+
+.sortable-table th.sortable.sorted-desc .sort-icon::before {
+    content: '▼';
+    color: var(--blue-600);
+    opacity: 1;
+}
+
+.sortable-table th.sortable.sorted-asc .sort-icon,
+.sortable-table th.sortable.sorted-desc .sort-icon {
+    opacity: 1;
+}
+
+/* ===== Expandable Row & Show More Button ===== */
+.truncate-cell {
+    position: relative;
+    max-width: 300px;
+}
+
+.truncated-text {
+    display: inline-block;
+    word-wrap: break-word;
+}
+
+.show-more-btn {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    background-color: var(--blue-500);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background-color 0.2s;
+}
+
+.show-more-btn:hover {
+    background-color: var(--blue-600);
+}
+
+.show-more-btn.expanded {
+    background-color: var(--text-muted);
+}
+
+.show-more-btn.expanded:hover {
+    background-color: var(--text-secondary);
+}
+
+.truncate-cell.expanded .truncated-text {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.expandable-row.expanded {
+    background-color: var(--blue-50);
+}
+
+[data-theme="dark"] .expandable-row.expanded {
+    background-color: var(--bg-accent);
+}

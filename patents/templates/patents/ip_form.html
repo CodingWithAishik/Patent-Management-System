@@ -9,6 +9,10 @@
 
     <form method="post" class="form-card">
         {% csrf_token %}
+
+        {% if form_errors|get_item:'non_field' %}
+            <div class="alert alert-danger">{{ form_errors|get_item:'non_field' }}</div>
+        {% endif %}
         
         {% for field in category.field_definitions %}
             <div class="form-group">
@@ -23,14 +27,14 @@
                         name="{{ field.name }}" 
                         rows="4"
                         {% if field.required %}required{% endif %}
-                    >{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}</textarea>
+                    >{% if form_data %}{{ form_data|get_item:field.name }}{% elif ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}</textarea>
                 
                 {% elif field.type == 'number' %}
                     <input 
                         type="number" 
                         id="{{ field.name }}" 
                         name="{{ field.name }}" 
-                        value="{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
+                        value="{% if form_data %}{{ form_data|get_item:field.name }}{% elif ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
                         {% if field.required %}required{% endif %}
                     >
                 
@@ -39,7 +43,7 @@
                         type="date" 
                         id="{{ field.name }}" 
                         name="{{ field.name }}" 
-                        value="{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
+                        value="{% if form_data %}{{ form_data|get_item:field.name }}{% elif ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
                         {% if field.required %}required{% endif %}
                     >
                 
@@ -52,7 +56,7 @@
                         <option value="">-- Select --</option>
                         {% for option in field.options %}
                             <option value="{{ option }}" 
-                                {% if ip_item and ip_item.data|get_item:field.name == option %}selected{% endif %}
+                                {% if form_data and form_data|get_item:field.name == option %}selected{% elif ip_item and ip_item.data|get_item:field.name == option %}selected{% endif %}
                             >{{ option }}</option>
                         {% endfor %}
                     </select>
@@ -62,9 +66,13 @@
                         type="text" 
                         id="{{ field.name }}" 
                         name="{{ field.name }}" 
-                        value="{% if ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
+                        value="{% if form_data %}{{ form_data|get_item:field.name }}{% elif ip_item %}{{ ip_item.data|get_item:field.name }}{% endif %}"
                         {% if field.required %}required{% endif %}
                     >
+                {% endif %}
+
+                {% if form_errors|get_item:field.name %}
+                    <div class="field-error">{{ form_errors|get_item:field.name }}</div>
                 {% endif %}
             </div>
         {% endfor %}
@@ -80,6 +88,12 @@
 .required {
     color: var(--danger-color);
     margin-left: 2px;
+}
+
+.field-error {
+    margin-top: 4px;
+    color: #c62828;
+    font-size: 0.9rem;
 }
 </style>
 {% endblock %}
