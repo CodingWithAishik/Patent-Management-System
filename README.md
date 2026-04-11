@@ -179,7 +179,6 @@ Access the application at: **http://127.0.0.1:8000/**
 ## Data Model
 
 ### Copyright
-- Serial Number
 - Year
 - Name of Faculty/Students
 - Title of Copy rights
@@ -187,7 +186,6 @@ Access the application at: **http://127.0.0.1:8000/**
 - Inventor(s)
 
 ### Patent Filed
-- Serial Number
 - Date of Filing
 - Inventor(s)/Faculty/Student
 - Title of Patent
@@ -197,7 +195,6 @@ Access the application at: **http://127.0.0.1:8000/**
 - Applicant Name
 
 ### Patent Granted
-- Serial Number
 - Granted Patent No.
 - Date of Grant
 - Inventor(s)/Faculty/Student

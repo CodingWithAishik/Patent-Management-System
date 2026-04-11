@@ -76,7 +76,6 @@ class IntellectualProperty(models.Model):
 
 class Copyright(models.Model):
     """Model for Copyright data"""
-    sl_no = models.IntegerField(null=True, blank=True, verbose_name="Serial Number")
     year = models.CharField(max_length=10, null=True, blank=True, verbose_name="Year")
     faculty_students = models.TextField(null=True, blank=True, verbose_name="Name of Faculty/Students")
     title = models.TextField(null=True, blank=True, verbose_name="Title of Copy rights")
@@ -88,7 +87,7 @@ class Copyright(models.Model):
     
     class Meta:
         db_table = 'copyrights'
-        ordering = ['-year', '-sl_no']
+        ordering = ['-year']
         verbose_name = 'Copyright'
         verbose_name_plural = 'Copyrights'
     
@@ -98,7 +97,6 @@ class Copyright(models.Model):
 
 class PatentFiled(models.Model):
     """Model for Filed Patents"""
-    sl_no = models.IntegerField(null=True, blank=True, verbose_name="Serial Number")
     date_of_filing = models.CharField(max_length=50, null=True, blank=True, verbose_name="Date of Filing")
     inventors = models.TextField(null=True, blank=True, verbose_name="Inventor(s)/Faculty/Student")
     title = models.TextField(null=True, blank=True, verbose_name="Title of Patent")
@@ -112,7 +110,7 @@ class PatentFiled(models.Model):
     
     class Meta:
         db_table = 'patents_filed'
-        ordering = ['-date_of_filing', '-sl_no']
+        ordering = ['-date_of_filing']
         verbose_name = 'Patent (Filed)'
         verbose_name_plural = 'Patents (Filed)'
     
@@ -122,7 +120,6 @@ class PatentFiled(models.Model):
 
 class PatentGranted(models.Model):
     """Model for Granted Patents"""
-    sl_no = models.IntegerField(null=True, blank=True, verbose_name="Serial Number")
     granted_patent_no = models.CharField(max_length=100, null=True, blank=True, verbose_name="Granted Patent No.")
     date_of_grant = models.CharField(max_length=50, null=True, blank=True, verbose_name="Date of Grant")
     inventors = models.TextField(null=True, blank=True, verbose_name="Inventor(s)/Faculty/Student")
@@ -137,7 +134,7 @@ class PatentGranted(models.Model):
     
     class Meta:
         db_table = 'patents_granted'
-        ordering = ['-date_of_grant', '-sl_no']
+        ordering = ['-date_of_grant']
         verbose_name = 'Patent (Granted)'
         verbose_name_plural = 'Patents (Granted)'
     

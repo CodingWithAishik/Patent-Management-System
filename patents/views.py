@@ -13,20 +13,20 @@ import json
 class CopyrightForm(ModelForm):
     class Meta:
         model = Copyright
-        fields = ['sl_no', 'year', 'faculty_students', 'title', 'filing_info', 'inventors']
+        fields = ['year', 'faculty_students', 'title', 'filing_info', 'inventors']
 
 
 class PatentFiledForm(ModelForm):
     class Meta:
         model = PatentFiled
-        fields = ['sl_no', 'date_of_filing', 'inventors', 'title', 'application_number', 
+        fields = ['date_of_filing', 'inventors', 'title', 'application_number', 
                   'date_of_publication', 'abstract', 'applicant_name']
 
 
 class PatentGrantedForm(ModelForm):
     class Meta:
         model = PatentGranted
-        fields = ['sl_no', 'granted_patent_no', 'date_of_grant', 'inventors', 'title', 
+        fields = ['granted_patent_no', 'date_of_grant', 'inventors', 'title', 
                   'application_number', 'date_of_publication', 'filing_institute', 'abstract']
 
 

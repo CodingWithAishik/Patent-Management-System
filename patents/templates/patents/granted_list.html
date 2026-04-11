@@ -17,10 +17,6 @@
     <table class="sortable-table">
         <thead>
             <tr>
-                <th class="sortable" data-field="sl_no" data-type="number">
-                    Sl. No. 
-                    <span class="sort-icon">⇅</span>
-                </th>
                 <th>Patent No.</th>
                 <th class="sortable" data-field="date_of_grant" data-type="date">
                     Date of Grant
@@ -35,7 +31,6 @@
         <tbody>
             {% for item in patents %}
             <tr class="expandable-row" data-row-id="{{ item.pk }}">
-                <td>{{ item.sl_no|default:"-" }}</td>
                 <td>{{ item.granted_patent_no|default:"-" }}</td>
                 <td>{{ item.date_of_grant|normalize_date|default:"-" }}</td>
                 <td>

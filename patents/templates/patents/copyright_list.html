@@ -17,10 +17,6 @@
     <table class="sortable-table">
         <thead>
             <tr>
-                <th class="sortable" data-field="sl_no" data-type="number">
-                    Sl. No. 
-                    <span class="sort-icon">⇅</span>
-                </th>
                 <th class="sortable" data-field="year" data-type="text">
                     Year 
                     <span class="sort-icon">⇅</span>
@@ -35,7 +31,6 @@
         <tbody>
             {% for item in copyrights %}
             <tr class="expandable-row" data-row-id="{{ item.pk }}">
-                <td>{{ item.sl_no|default:"-" }}</td>
                 <td>{{ item.year|default:"-" }}</td>
                 <td>
                     <div class="truncate-cell" data-full-text="{{ item.faculty_students|default:'' }}">

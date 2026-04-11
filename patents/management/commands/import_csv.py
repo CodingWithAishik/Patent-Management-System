@@ -122,7 +122,6 @@ class Command(BaseCommand):
                 continue
 
             values = [
-                self.safe_int(row[0]),
                 normalize_year(row[1]),
                 clean_text(row[2]),
                 normalize_multiline_text(row[3]),
@@ -138,12 +137,11 @@ class Command(BaseCommand):
 
             try:
                 Copyright.objects.create(
-                    sl_no=values[0],
-                    year=values[1],
-                    faculty_students=values[2],
-                    title=values[3],
-                    filing_info=values[4],
-                    inventors=values[5],
+                    year=values[0],
+                    faculty_students=values[1],
+                    title=values[2],
+                    filing_info=values[3],
+                    inventors=values[4],
                 )
                 count += 1
             except Exception as exc:
@@ -206,7 +204,6 @@ class Command(BaseCommand):
                 continue
 
             values = [
-                self.safe_int(row[0]),
                 normalize_date_text(row[1]),
                 clean_text(row[2]),
                 normalize_multiline_text(row[3]),
@@ -224,14 +221,13 @@ class Command(BaseCommand):
 
             try:
                 PatentFiled.objects.create(
-                    sl_no=values[0],
-                    date_of_filing=values[1],
-                    inventors=values[2],
-                    title=values[3],
-                    application_number=values[4],
-                    date_of_publication=values[5],
-                    abstract=values[6],
-                    applicant_name=values[7],
+                    date_of_filing=values[0],
+                    inventors=values[1],
+                    title=values[2],
+                    application_number=values[3],
+                    date_of_publication=values[4],
+                    abstract=values[5],
+                    applicant_name=values[6],
                 )
                 count += 1
             except Exception as exc:
@@ -294,7 +290,6 @@ class Command(BaseCommand):
                 continue
 
             values = [
-                self.safe_int(row[0]),
                 normalize_multiline_text(row[1]),
                 normalize_date_text(row[2]),
                 clean_text(row[3]),
@@ -313,15 +308,14 @@ class Command(BaseCommand):
 
             try:
                 PatentGranted.objects.create(
-                    sl_no=values[0],
-                    granted_patent_no=values[1],
-                    date_of_grant=values[2],
-                    inventors=values[3],
-                    title=values[4],
-                    application_number=values[5],
-                    date_of_publication=values[6],
-                    filing_institute=values[7],
-                    abstract=values[8],
+                    granted_patent_no=values[0],
+                    date_of_grant=values[1],
+                    inventors=values[2],
+                    title=values[3],
+                    application_number=values[4],
+                    date_of_publication=values[5],
+                    filing_institute=values[6],
+                    abstract=values[7],
                 )
                 count += 1
             except Exception as exc:
@@ -408,10 +402,3 @@ class Command(BaseCommand):
             for sample in samples:
                 self.stdout.write(f'  * {sample}')
 
-    def safe_int(self, value):
-        """Safely convert value to integer"""
-        try:
-            text = clean_text(value)
-            return int(float(text)) if text else None
-        except (ValueError, TypeError):
-            return None

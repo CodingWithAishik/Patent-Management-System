@@ -13,11 +13,6 @@
         {% csrf_token %}
         
         <div class="form-group">
-            <label for="{{ form.sl_no.id_for_label }}">{{ form.sl_no.label }}</label>
-            {{ form.sl_no }}
-        </div>
-        
-        <div class="form-group">
             <label for="{{ form.date_of_filing.id_for_label }}">{{ form.date_of_filing.label }}</label>
             {{ form.date_of_filing }}
         </div>

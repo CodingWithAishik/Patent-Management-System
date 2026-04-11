@@ -62,7 +62,6 @@
     <table>
         <thead>
             <tr>
-                <th>Sl. No.</th>
                 <th>Year</th>
                 <th>Faculty/Students</th>
                 <th>Title</th>
@@ -74,7 +73,6 @@
         <tbody>
             {% for item in results %}
             <tr>
-                <td>{{ item.sl_no|default:"-" }}</td>
                 <td>{{ item.year|default:"-" }}</td>
                 <td>
                     <div class="truncate-cell" data-full-text="{{ item.faculty_students|default:'' }}">
